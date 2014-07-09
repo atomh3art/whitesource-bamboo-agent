@@ -16,12 +16,14 @@
 
 package org.whitesource.bamboo.plugins;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Map.Entry;
-
+import com.atlassian.bamboo.build.logger.BuildLogger;
+import com.atlassian.bamboo.configuration.ConfigurationMap;
+import com.atlassian.bamboo.plan.artifact.ArtifactDefinitionContext;
+import com.atlassian.bamboo.plan.artifact.ArtifactDefinitionContextImpl;
+import com.atlassian.bamboo.security.SecureToken;
+import com.atlassian.bamboo.task.*;
+import com.atlassian.bamboo.v2.build.BuildContext;
+import com.atlassian.bamboo.variable.CustomVariableContextImpl;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -38,17 +40,11 @@ import org.whitesource.bamboo.agent.GenericOssInfoExtractor;
 import org.whitesource.bamboo.agent.MavenOssInfoExtractor;
 import org.whitesource.bamboo.agent.WssUtils;
 
-import com.atlassian.bamboo.build.logger.BuildLogger;
-import com.atlassian.bamboo.configuration.ConfigurationMap;
-import com.atlassian.bamboo.plan.artifact.ArtifactDefinitionContext;
-import com.atlassian.bamboo.plan.artifact.ArtifactDefinitionContextImpl;
-import com.atlassian.bamboo.task.TaskContext;
-import com.atlassian.bamboo.task.TaskException;
-import com.atlassian.bamboo.task.TaskResult;
-import com.atlassian.bamboo.task.TaskResultBuilder;
-import com.atlassian.bamboo.task.TaskType;
-import com.atlassian.bamboo.v2.build.BuildContext;
-import com.atlassian.bamboo.variable.CustomVariableContextImpl;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class AgentTask extends CustomVariableContextImpl implements TaskType
 {
@@ -78,8 +74,8 @@ public class AgentTask extends CustomVariableContextImpl implements TaskType
     }
 
     private void updateOssInventory(final BuildLogger buildLogger, final TaskResultBuilder taskResultBuilder,
-            final ConfigurationMap configurationMap, final BuildContext buildContext, final File buildDirectory,
-            Collection<AgentProjectInfo> projectInfos)
+                                    final ConfigurationMap configurationMap, final BuildContext buildContext, final File buildDirectory,
+                                    Collection<AgentProjectInfo> projectInfos)
     {
         if (CollectionUtils.isEmpty(projectInfos))
         {
@@ -137,7 +133,7 @@ public class AgentTask extends CustomVariableContextImpl implements TaskType
     }
 
     private void validateVariableSubstitution(final BuildLogger buildLogger, final TaskResultBuilder taskResultBuilder,
-            final Map<String, String> configurationMap)
+                                              final Map<String, String> configurationMap)
     {
         buildLogger.addBuildLogEntry("White Source configuration:");
         for (Entry<String, String> variable : configurationMap.entrySet())
@@ -158,8 +154,8 @@ public class AgentTask extends CustomVariableContextImpl implements TaskType
     }
 
     private Collection<AgentProjectInfo> collectOssUsageInformation(final BuildLogger buildLogger,
-            final ConfigurationMap configurationMap, final String projectName, final java.io.File rootDirectory,
-            TaskContext taskContext, TaskResultBuilder taskResultBuilder)
+                                                                    final ConfigurationMap configurationMap, final String projectName, final java.io.File rootDirectory,
+                                                                    TaskContext taskContext, TaskResultBuilder taskResultBuilder)
     {
         final String projectType = configurationMap.get(AgentTaskConfigurator.PROJECT_TYPE);
 
@@ -203,7 +199,7 @@ public class AgentTask extends CustomVariableContextImpl implements TaskType
     }
 
     private void reportCheckPoliciesResult(CheckPoliciesResult result, final BuildContext buildContext,
-            final File buildDirectory, BuildLogger buildLogger) throws IOException
+                                           final File buildDirectory, BuildLogger buildLogger) throws IOException
     {
         PolicyCheckReport report = new PolicyCheckReport(result, buildContext.getProjectName(),
                 buildContext.getBuildResultKey());
@@ -238,7 +234,7 @@ public class AgentTask extends CustomVariableContextImpl implements TaskType
 
         if (reportArchive != null)
         {
-            ArtifactDefinitionContext artifact = new ArtifactDefinitionContextImpl();
+            ArtifactDefinitionContext artifact = new ArtifactDefinitionContextImpl(SecureToken.create());
             artifact.setName(reportArchive.getName());
             artifact.setCopyPattern(reportArchive.getName());
             buildContext.getArtifactContext().getDefinitionContexts().add(artifact);
